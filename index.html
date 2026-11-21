@@ -23,7 +23,7 @@ h2{font-size:13px;color:var(--sub);font-weight:500;margin:22px 0 8px;letter-spac
 .view{display:none}.view.on{display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
 .sub{color:var(--sub);font-size:12.5px}
 .big{font-size:22px;font-weight:600}
 .pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;border:1px solid var(--line);color:var(--sub)}
@@ -160,12 +160,18 @@ nav button.on{color:var(--gold)}
     <div class="sub">毎週土曜に出してください（夜でもOK）。質問はLINEで聞いてください。</div>
     <label class="f">日付</label><input type="date" id="weekDate">
     <div class="grid2">
-      <div><label class="f">体重 (kg) 朝</label><input type="number" id="wWeight" inputmode="decimal" step="0.1" placeholder="65.4"></div>
+      <div><label class="f">今朝の体重 (kg)</label><input type="number" id="wWeight" inputmode="decimal" step="0.1" placeholder="65.4"></div>
       <div><label class="f">ウエスト (cm)</label><input type="number" id="wWaist" inputmode="decimal" step="0.1" placeholder="76.0"></div>
+      <div><label class="f">平均睡眠時間 (時間)</label><input type="number" id="wSleep" inputmode="decimal" step="0.1" placeholder="7"></div>
+      <div><label class="f">有酸素の回数</label><input type="number" id="wCardio" inputmode="numeric" min="0" placeholder="2"></div>
+      <div><label class="f">カロリー目標を守れた日 (7日中)</label><input type="number" id="wKcalDays" inputmode="numeric" min="0" max="7" placeholder="5"></div>
+      <div><label class="f">タンパク質目標を守れた日 (7日中)</label><input type="number" id="wPDays" inputmode="numeric" min="0" max="7" placeholder="5"></div>
+      <div><label class="f">筋トレした回数</label><input type="number" id="wTrainCount" inputmode="numeric" min="0" placeholder="3"></div>
     </div>
+    <label class="f">メイン種目の最高重量</label><input type="text" id="wMainLift" placeholder="ベンチプレス 80kg×5回">
     <label class="f">今週できたこと</label><textarea id="wGood"></textarea>
-    <label class="f">できなかったこと・つまずき</label><textarea id="wStruggle"></textarea>
-    <label class="f">来週やること</label><textarea id="wNext"></textarea>
+    <label class="f">うまくいかなかったこと</label><textarea id="wStruggle"></textarea>
+    <label class="f">来週これだけはやること</label><textarea id="wNext"></textarea>
   </div>
   <div class="card">
     <div class="sub" style="margin-bottom:10px">体の写真（なるべく上裸）</div>
@@ -516,13 +522,14 @@ $('#restBtn').onclick = e => send(e.target, { action: 'rest', date: $('#trainDat
 $('#weekSend').onclick = e => {
   const w = parseFloat($('#wWeight').value);
   if (!isFinite(w)) return toast('体重を入れてください');
+  if (['wKcalDays', 'wPDays'].some(id => { const v = $('#' + id).value; return v !== '' && !(+v >= 0 && +v <= 7); })) return toast('守れた日は0〜7で入れてください');
   const labels = Object.keys(wp).filter(k => wp[k].items.length);
   const imgs = labels.map(k => ({ label: k, mime: 'image/jpeg', data: wp[k].items[0].data.split(',')[1] }));
   send(e.target, {
     action: 'weekly', date: $('#weekDate').value, images: imgs,
-    fields: { weight: w, waist: $('#wWaist').value, good: $('#wGood').value, struggle: $('#wStruggle').value, next: $('#wNext').value }
+    fields: { weight: w, waist: $('#wWaist').value, sleep: $('#wSleep').value, kcalDays: $('#wKcalDays').value, pDays: $('#wPDays').value, trainCount: $('#wTrainCount').value, mainLift: $('#wMainLift').value, cardio: $('#wCardio').value, good: $('#wGood').value, struggle: $('#wStruggle').value, next: $('#wNext').value }
   }, () => {
-    ['wWeight', 'wWaist', 'wGood', 'wStruggle', 'wNext'].forEach(id => $('#' + id).value = '');
+    ['wWeight', 'wWaist', 'wSleep', 'wKcalDays', 'wPDays', 'wTrainCount', 'wMainLift', 'wCardio', 'wGood', 'wStruggle', 'wNext'].forEach(id => $('#' + id).value = '');
     Object.values(wp).forEach(p => p.clear());
   }, '週1を送りました（写真 ' + labels.length + '/5）');
 };
