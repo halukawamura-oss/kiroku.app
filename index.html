@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="記録">
+<meta name="theme-color" content="#0b0b0c">
+<link rel="apple-touch-icon" href="icon.png">
+<title>記録 | hal_luxmax</title>
+<style>
+:root{--bg:#0b0b0c;--card:#16161a;--line:#2a2a31;--txt:#f1efe9;--sub:#9a98a0;--gold:#c9a96e;--ok:#7bc47f;--warn:#e0a458;--bad:#e07a7a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;font-size:15px;line-height:1.55}
+body{padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 84px)}
+header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}
+header .brand{font-size:11px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
+header .who{font-size:12px;color:var(--sub)}
+h1{font-size:20px;margin:4px 0 12px;font-weight:600}
+h2{font-size:13px;color:var(--sub);font-weight:500;margin:22px 0 8px;letter-spacing:.04em}
+.view{display:none}.view.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sub{color:var(--sub);font-size:12.5px}
+.big{font-size:22px;font-weight:600}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;border:1px solid var(--line);color:var(--sub)}
+.pill.ok{color:var(--ok);border-color:#2f4d31}.pill.warn{color:var(--warn);border-color:#58431f}.pill.bad{color:var(--bad);border-color:#5a2f2f}
+.btn{appearance:none;border:0;border-radius:12px;background:var(--gold);color:#17130b;font-weight:600;font-size:15px;padding:13px 16px;width:100%;margin-top:10px}
+.btn:disabled{opacity:.5}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.btn.small{width:auto;padding:8px 14px;font-size:13px;margin:0}
+label.f{display:block;font-size:12.5px;color:var(--sub);margin:12px 0 4px}
+input[type=text],input[type=number],input[type=date],input[type=time],textarea,select{width:100%;background:#0f0f12;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;font-family:inherit}
+textarea{min-height:76px;resize:vertical}
+.banner{border-radius:14px;padding:12px 14px;margin-bottom:12px;background:#221c10;border:1px solid #5b4a22;color:#f0dcae}
+.banner.alert{background:#2a1616;border-color:#6b3434;color:#f3c4c4}
+.hint{background:#14141a;border:1px dashed var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--sub);margin-bottom:12px}
+.picker .thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.th{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.th img{width:100%;height:100%;object-fit:cover}
+.th button{position:absolute;top:2px;right:2px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:14px;line-height:1}
+.picker .add{display:flex;align-items:center;justify-content:center;margin-top:8px;border:1px dashed #3a3a44;border-radius:12px;padding:14px;color:var(--gold);font-size:14px}
+.picker.single .add{margin-top:0}
+.picker.single .th+.add{display:none}
+.slot{margin-bottom:10px}.slot .t{font-size:13px;margin-bottom:6px}
+.chart svg{width:100%;height:auto;display:block}
+.empty{color:var(--sub);font-size:12.5px;padding:18px 0;text-align:center}
+.seg{display:flex;background:#0f0f12;border:1px solid var(--line);border-radius:12px;padding:3px;margin:12px 0 6px}
+.seg button{flex:1;border:0;background:none;color:var(--sub);padding:9px 0;border-radius:9px;font-size:14px}
+.seg button.on{background:var(--card);color:var(--gold)}
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center}
+.chip b{display:block;font-size:17px;font-weight:600}.chip span{font-size:10.5px;color:var(--sub)}
+.ex{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.ex .hd{display:flex;justify-content:space-between;align-items:center}
+.ex .nm{font-weight:600}
+.ex .x{background:none;border:0;color:var(--sub);font-size:18px;padding:4px 8px}
+.ex .last{font-size:11.5px;color:var(--sub);margin:2px 0 8px}
+.sr{display:grid;grid-template-columns:18px 1fr 20px 1fr 18px 62px 24px;gap:6px;align-items:center;margin-bottom:6px}
+.sr input{padding:9px 8px;font-size:16px;text-align:right}
+.sr .u{font-size:11px;color:var(--sub)}
+.sr .rm{font-size:11px;color:var(--sub);text-align:right}
+.sr .no{font-size:12px;color:var(--sub)}
+.sr .del{background:none;border:0;color:var(--sub);font-size:16px;padding:0}
+.addset{width:100%;background:none;border:1px dashed #3a3a44;color:var(--gold);border-radius:10px;padding:8px;font-size:13px;margin-top:2px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;z-index:20}
+.sheet.on{display:block}
+.sheet .in{position:absolute;left:0;right:0;bottom:0;max-height:78%;overflow:auto;background:#121216;border-radius:18px 18px 0 0;padding:14px 16px calc(env(safe-area-inset-bottom) + 18px)}
+.sheet h3{margin:14px 0 8px;font-size:12.5px;color:var(--gold);font-weight:600;letter-spacing:.06em}
+.sheet .opt{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;margin-bottom:6px;font-size:15px}
+.sheet .opt.used{opacity:.4}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(14,14,17,.96);border-top:1px solid var(--line);padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);backdrop-filter:blur(10px)}
+nav button{flex:1;background:none;border:0;color:var(--sub);font-size:11px;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .ic{font-size:19px;line-height:1}
+nav button.on{color:var(--gold)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 86px);transform:translateX(-50%);background:#f1efe9;color:#111;padding:10px 16px;border-radius:99px;font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88%;text-align:center}
+#toast.on{opacity:1}
+.demo{display:inline-block;font-size:10px;border:1px solid var(--gold);color:var(--gold);border-radius:6px;padding:0 6px;margin-left:6px;letter-spacing:.06em}
+</style>
+</head>
+<body>
+<header><div class="brand">hal_luxmax<span id="demoTag"></span></div><div class="who" id="who"></div></header>
+
+<!-- ホーム -->
+<section class="view on" id="v-home">
+  <div id="installHint"></div>
+  <div id="banner"></div>
+  <h1>今日</h1>
+  <div class="grid2">
+    <div class="card" data-go="meal"><div class="sub">食事</div><div id="stMeal" class="big">…</div></div>
+    <div class="card" data-go="train"><div class="sub">筋トレ</div><div id="stTrain" class="big">…</div></div>
+  </div>
+  <div class="card row"><div><div class="sub">連続で食事を記録</div><div class="big" id="stStreak">…</div></div><div class="sub" id="stWeekly" style="text-align:right"></div></div>
+
+  <h2>推移</h2>
+  <div class="card chart"><div class="row"><div class="sub">体重 (kg)</div><div class="sub" id="wLast"></div></div><div id="chW"></div></div>
+  <div class="card chart"><div class="row"><div class="sub">カロリー (kcal)</div><div class="sub" id="kLast"></div></div><div id="chK"></div></div>
+  <div class="card chart"><div class="row"><div class="sub">重量（推定1RM, kg）</div><select id="liftSel" style="width:auto;padding:6px 10px;font-size:13px"></select></div><div id="chL"></div></div>
+  <div class="sub" id="pendingNote" style="margin:-2px 2px 12px"></div>
+
+  <h2>リマインド</h2>
+  <div class="card">
+    <div class="sub">毎日の食事、金曜の予告、土曜の週1提出をiPhoneのカレンダーに通知つきで入れます。</div>
+    <label class="f">毎日の通知時刻</label>
+    <input type="time" id="remTime" value="21:00">
+    <button class="btn ghost" id="remBtn">カレンダーに登録</button>
+    <div class="sub" id="remNote" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<!-- 食事 -->
+<section class="view" id="v-meal">
+  <h1>食事</h1>
+  <div class="card">
+    <div class="sub">カロミルの今日の画面をスクショして選ぶだけ。1日1回、寝る前でOK。</div>
+    <label class="f">日付</label><input type="date" id="mealDate">
+    <label class="f">スクショ（最大3枚）</label>
+    <div id="mealPicker"></div>
+    <button class="btn" id="mealSend">送信</button>
+  </div>
+</section>
+
+<!-- 筋トレ -->
+<section class="view" id="v-train">
+  <h1>筋トレ</h1>
+  <div class="card">
+    <label class="f" style="margin-top:0">日付</label><input type="date" id="trainDate">
+    <div class="seg"><button class="on" id="segInput">入力する</button><button id="segShot">スクショで送る</button></div>
+    <div class="sub" id="trainNote"></div>
+  </div>
+  <div id="paneInput">
+    <div class="chips">
+      <div class="chip"><b id="cE">0</b><span>種目</span></div>
+      <div class="chip"><b id="cS">0</b><span>セット</span></div>
+      <div class="chip"><b id="cR">0</b><span>レップ</span></div>
+      <div class="chip"><b id="cV">0</b><span>負荷量 kg</span></div>
+    </div>
+    <div id="exList"></div>
+    <button class="btn ghost" id="addEx">＋ 種目を追加</button>
+    <button class="btn" id="trainSave">保存して送信</button>
+  </div>
+  <div id="paneShot" style="display:none">
+    <div class="card">
+      <div class="sub">筋トレMemoの記録をスクショして選んでください。</div>
+      <label class="f">スクショ（最大3枚）</label>
+      <div id="trainPicker"></div>
+      <button class="btn" id="trainSend">送信</button>
+    </div>
+  </div>
+  <button class="btn ghost" id="restBtn" style="margin-top:14px">今日は休み</button>
+</section>
+
+<!-- 週1 -->
+<section class="view" id="v-week">
+  <h1>週1チェックイン</h1>
+  <div class="card">
+    <div class="sub">毎週土曜に出してください（夜でもOK）。質問はLINEで聞いてください。</div>
+    <label class="f">日付</label><input type="date" id="weekDate">
+    <div class="grid2">
+      <div><label class="f">体重 (kg) 朝</label><input type="number" id="wWeight" inputmode="decimal" step="0.1" placeholder="65.4"></div>
+      <div><label class="f">ウエスト (cm)</label><input type="number" id="wWaist" inputmode="decimal" step="0.1" placeholder="76.0"></div>
+    </div>
+    <label class="f">今週できたこと</label><textarea id="wGood"></textarea>
+    <label class="f">できなかったこと・つまずき</label><textarea id="wStruggle"></textarea>
+    <label class="f">来週やること</label><textarea id="wNext"></textarea>
+  </div>
+  <div class="card">
+    <div class="sub" style="margin-bottom:10px">体の写真（なるべく上裸）</div>
+    <div class="slot"><div class="t">正面</div><div id="pBodyF"></div></div>
+    <div class="slot"><div class="t">横</div><div id="pBodyS"></div></div>
+    <div class="slot"><div class="t">後ろ</div><div id="pBodyB"></div></div>
+    <div class="sub" style="margin:14px 0 10px">顔の写真（髪をセットした、ビジュのいい状態）</div>
+    <div class="slot"><div class="t">正面</div><div id="pFaceF"></div></div>
+    <div class="slot"><div class="t">横</div><div id="pFaceS"></div></div>
+    <button class="btn" id="weekSend">送信</button>
+  </div>
+</section>
+
+<nav>
+  <button class="on" data-v="home"><span class="ic">◉</span>ホーム</button>
+  <button data-v="meal"><span class="ic">◍</span>食事</button>
+  <button data-v="train"><span class="ic">▲</span>筋トレ</button>
+  <button data-v="week"><span class="ic">▣</span>週1</button>
+</nav>
+<div class="sheet" id="exSheet"><div class="in" id="exSheetIn"></div></div>
+<div id="toast"></div>
+
+<script>
+/* ---------- 設定 ----------
+   URLの ?e=受け口URL&c=C01&k=鍵 を読む。eが無ければデモモード（この端末だけに保存） */
+const DEFAULT_ENDPOINT = '';
+const $ = s => document.querySelector(s);
+const enc = encodeURIComponent;
+const mem = {};
+const store = {
+  get(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; }catch(e){ return mem[k] || null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ mem[k] = v; } }
+};
+const qs = new URLSearchParams(location.search);
+const saved = store.get('cfg') || {};
+const cfg = { e: qs.get('e') || saved.e || DEFAULT_ENDPOINT, c: qs.get('c') || saved.c || '', k: qs.get('k') || saved.k || '' };
+store.set('cfg', cfg);
+const DEMO = !cfg.e;
+
+/* ---------- 日付 ---------- */
+const p2 = n => String(n).padStart(2,'0');
+const ymd = (d = new Date()) => d.getFullYear() + '-' + p2(d.getMonth()+1) + '-' + p2(d.getDate());
+const addDays = (s, n) => { const d = new Date(s + 'T00:00:00'); d.setDate(d.getDate() + n); return ymd(d); };
+const md = s => { const d = new Date(s + 'T00:00:00'); return (d.getMonth()+1) + '/' + d.getDate(); };
+
+/* ---------- トースト ---------- */
+let tt;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2600); }
+
+/* ---------- 画像 ---------- */
+async function compress(file){
+  const url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const MAX = 2200;
+    let w = img.naturalWidth, h = img.naturalHeight;
+    const s = Math.min(1, MAX / Math.max(w, h));
+    w = Math.round(w * s); h = Math.round(h * s);
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(img, 0, 0, w, h);
+    return c.toDataURL('image/jpeg', 0.82);
+  } finally { URL.revokeObjectURL(url); }
+}
+function Picker(root, opt){
+  const max = opt.max || 1, items = [];
+  root.className = 'picker' + (max === 1 ? ' single' : '');
+  root.innerHTML = '<div class="thumbs"></div><label class="add"><input type="file" accept="image/*" hidden' + (max > 1 ? ' multiple' : '') + '><span>' + (opt.label || '画像を選ぶ') + '</span></label>';
+  const input = root.querySelector('input'), thumbs = root.querySelector('.thumbs');
+  function render(){
+    thumbs.innerHTML = items.map((it, i) => '<div class="th"><img src="' + it.data + '" alt=""><button type="button" data-i="' + i + '">×</button></div>').join('');
+    thumbs.querySelectorAll('button').forEach(b => b.onclick = () => { items.splice(+b.dataset.i, 1); render(); });
+  }
+  input.addEventListener('change', async () => {
+    const files = [...input.files]; input.value = '';
+    for (const f of files){
+      if (max === 1) items.length = 0; else if (items.length >= max) { toast('最大' + max + '枚です'); break; }
+      try{ items.push({ data: await compress(f) }); }catch(e){ toast('画像を読めませんでした'); }
+    }
+    render();
+  });
+  render();
+  return { items, clear(){ items.length = 0; render(); } };
+}
+const toPayload = (list, labels) => list.map((x, i) => ({ label: labels ? labels[i] : 'img' + (i+1), mime: 'image/jpeg', data: x.data.split(',')[1] }));
+
+/* ---------- API（デモ付き） ---------- */
+const sample = {
+  weight: [[-56,67.8],[-49,67.1],[-42,66.9],[-35,66.0],[-28,65.7],[-21,65.1],[-14,64.8],[-7,64.2]],
+  kcal: [[-6,2150],[-5,2230],[-4,1980],[-3,2100],[-2,2050],[-1,2190]],
+  lifts: { 'ベンチプレス': [[-42,70],[-35,72.5],[-28,75],[-21,75],[-14,77.5],[-7,80]], 'スクワット': [[-35,90],[-28,95],[-14,100],[-7,102.5]] }
+};
+const DEFAULT_EX = [
+  ['胸','ベンチプレス'],['胸','インクラインダンベルプレス'],['胸','ダンベルフライ'],
+  ['背中','ラットプルダウン'],['背中','ローイング'],['背中','デッドリフト'],
+  ['脚','スクワット'],['脚','レッグプレス'],['脚','レッグカール'],
+  ['肩','ショルダープレス'],['肩','サイドレイズ'],['腕','バーベルカール'],['腕','トライセプスプッシュダウン']
+].map(x => ({ part: x[0], name: x[1] }));
+const sp = a => a.map(x => ({ d: addDays(ymd(), x[0]), v: x[1] }));
+const api = {
+  async status(){
+    if (DEMO){
+      const L = store.get('demoLogs') || [], t = ymd();
+      const meals = L.filter(l => l.kind === 'meal'), md_ = {};
+      meals.forEach(m => md_[m.date] = 1);
+      let streak = 0, d = md_[t] ? t : addDays(t, -1);
+      while (md_[d]) { streak++; d = addDays(d, -1); }
+      const tr = L.filter(l => (l.kind === 'train' || l.kind === 'rest') && l.date === t);
+      const wk = L.filter(l => l.kind === 'weekly').map(l => l.date).sort().pop() || null;
+      const DT = store.get('demoTrain') || {}, last = {};
+      Object.keys(DT).filter(x => x < t).sort().forEach(x => {
+        const by = {}; DT[x].forEach(s => (by[s.exercise] = by[s.exercise] || []).push({ w: s.weight, r: s.reps }));
+        Object.keys(by).forEach(n => last[n] = { date: x, sets: by[n] });
+      });
+      if (!last['ベンチプレス']) last['ベンチプレス'] = { date: addDays(t, -1), sets: [{ w: 80, r: 5 }, { w: 70, r: 7 }, { w: 60, r: 7 }] };
+      return { ok: true, name: 'デモ', today: t, mealToday: !!md_[t], exercises: DEFAULT_EX, last,
+        trainToday: tr.some(l => l.kind === 'train') ? 'done' : (tr.length ? 'rest' : 'none'),
+        streak, lastWeekly: wk, pending: L.filter(l => l.kind === 'meal' || l.kind === 'train').length,
+        series: { weight: sp(sample.weight), kcal: sp(sample.kcal), lifts: Object.fromEntries(Object.entries(sample.lifts).map(([k, v]) => [k, sp(v)])) } };
+    }
+    const r = await fetch(cfg.e + '?action=status&cid=' + enc(cfg.c) + '&k=' + enc(cfg.k));
+    return r.json();
+  },
+  async day(date){
+    if (DEMO){
+      const DT = store.get('demoTrain') || {}, L = store.get('demoLogs') || [];
+      if (DT[date]) return { ok: true, mode: 'input', sets: DT[date] };
+      if (L.some(l => l.kind === 'rest' && l.date === date)) return { ok: true, mode: 'rest', sets: [] };
+      if (L.some(l => l.kind === 'train' && l.date === date)) return { ok: true, mode: 'shot', sets: [] };
+      return { ok: true, mode: 'none', sets: [] };
+    }
+    const r = await fetch(cfg.e + '?action=day&cid=' + enc(cfg.c) + '&k=' + enc(cfg.k) + '&date=' + enc(date));
+    return r.json();
+  },
+  async submit(payload){
+    payload.c = cfg.c; payload.k = cfg.k;
+    if (DEMO){
+      let L = store.get('demoLogs') || [];
+      if (payload.action === 'trainlog'){
+        const DT = store.get('demoTrain') || {};
+        DT[payload.date] = payload.sets; store.set('demoTrain', DT);
+        L = L.filter(l => !(l.kind === 'rest' && l.date === payload.date));
+        if (!L.some(l => l.kind === 'train' && l.date === payload.date)) L.push({ kind: 'train', date: payload.date });
+      } else L.push({ kind: payload.action, date: payload.date });
+      store.set('demoLogs', L);
+      return { ok: true };
+    }
+    const r = await fetch(cfg.e, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    return r.json();
+  }
+};
+
+/* ---------- 画面切り替え ---------- */
+function show(v){
+  document.querySelectorAll('.view').forEach(e => e.classList.toggle('on', e.id === 'v-' + v));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  window.scrollTo(0, 0);
+  if (v === 'home') loadHome();
+  if (v === 'train') loadTrainDay();
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => show(b.dataset.v));
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => show(b.dataset.go));
+
+/* ---------- 折れ線グラフ ---------- */
+function chart(points, color){
+  if (!points || points.length < 2) return '<div class="empty">記録がたまると表示されます</div>';
+  const W = 320, H = 150, L = 38, R = 12, T = 14, B = 24;
+  const xs = points.map(p => new Date(p.d + 'T00:00:00').getTime()), ys = points.map(p => p.v);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  let y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const pad = (y1 - y0) * 0.15 || 1; y0 -= pad; y1 += pad;
+  const X = t => L + (x1 === x0 ? 0 : (t - x0) / (x1 - x0)) * (W - L - R);
+  const Y = v => T + (1 - (v - y0) / (y1 - y0)) * (H - T - B);
+  const pts = points.map((p, i) => X(xs[i]).toFixed(1) + ',' + Y(p.v).toFixed(1)).join(' ');
+  const fmt = v => (Math.round(v * 10) / 10).toString();
+  const dots = points.map((p, i) => '<circle cx="' + X(xs[i]).toFixed(1) + '" cy="' + Y(p.v).toFixed(1) + '" r="' + (i === points.length - 1 ? 4 : 2.5) + '" fill="' + color + '"/>').join('');
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img">' +
+    '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(y1 - pad) + '" y2="' + Y(y1 - pad) + '" stroke="#2a2a31" stroke-dasharray="3 4"/>' +
+    '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(y0 + pad) + '" y2="' + Y(y0 + pad) + '" stroke="#2a2a31" stroke-dasharray="3 4"/>' +
+    '<text x="' + (L - 6) + '" y="' + (Y(y1 - pad) + 4) + '" fill="#9a98a0" font-size="10" text-anchor="end">' + fmt(y1 - pad) + '</text>' +
+    '<text x="' + (L - 6) + '" y="' + (Y(y0 + pad) + 4) + '" fill="#9a98a0" font-size="10" text-anchor="end">' + fmt(y0 + pad) + '</text>' +
+    '<polyline fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round" points="' + pts + '"/>' + dots +
+    '<text x="' + L + '" y="' + (H - 6) + '" fill="#9a98a0" font-size="10">' + md(points[0].d) + '</text>' +
+    '<text x="' + (W - R) + '" y="' + (H - 6) + '" fill="#9a98a0" font-size="10" text-anchor="end">' + md(points[points.length - 1].d) + '</text></svg>';
+}
+const last = (a, u) => a && a.length ? a[a.length - 1].v + u : '';
+
+/* ---------- ホーム ---------- */
+let S = null;
+function banner(){
+  const t = new Date(), dow = t.getDay(), today = ymd(t), y = addDays(today, -1), lw = S.lastWeekly;
+  let h = '';
+  if (dow === 5) h = '<div class="banner">明日は週1チェックインの日です。体重は朝に測っておいてください。</div>';
+  else if (dow === 6 && lw !== today) h = '<div class="banner">今日は週1チェックインの日です。（週1タブから）</div>';
+  else if (dow === 0 && lw !== y && lw !== today) h = '<div class="banner alert">週1チェックインがまだ出ていません。今日中に出してください。</div>';
+  $('#banner').innerHTML = h;
+}
+async function loadHome(){
+  try{
+    S = await api.status();
+    if (!S.ok) throw new Error(S.error || 'error');
+  }catch(e){
+    $('#banner').innerHTML = '<div class="banner alert">' + (String(e.message) === 'unauthorized' ? 'URLが正しくありません。ハルに連絡してください。' : '読み込めませんでした。電波のいい所でもう一度開いてください。') + '</div>';
+    return;
+  }
+  $('#who').textContent = S.name || '';
+  banner();
+  $('#stMeal').innerHTML = S.mealToday ? '<span class="pill ok">済</span>' : '<span class="pill warn">まだ</span>';
+  $('#stTrain').innerHTML = S.trainToday === 'done' ? '<span class="pill ok">済</span>' : S.trainToday === 'rest' ? '<span class="pill">休み</span>' : '<span class="pill warn">まだ</span>';
+  $('#stStreak').textContent = S.streak + '日';
+  $('#stWeekly').textContent = S.lastWeekly ? '前回の週1：' + md(S.lastWeekly) : '週1は未提出';
+  const sr = S.series || {};
+  $('#chW').innerHTML = chart(sr.weight, '#c9a96e'); $('#wLast').textContent = last(sr.weight, ' kg');
+  $('#chK').innerHTML = chart(sr.kcal, '#7bc47f'); $('#kLast').textContent = last(sr.kcal, ' kcal');
+  const names = Object.keys(sr.lifts || {}), sel = $('#liftSel'), cur = sel.value;
+  sel.innerHTML = names.map(n => '<option>' + n.replace(/</g, '&lt;') + '</option>').join('');
+  if (names.includes(cur)) sel.value = cur;
+  sel.style.display = names.length ? '' : 'none';
+  const drawL = () => { $('#chL').innerHTML = names.length ? chart(sr.lifts[sel.value], '#8ab4e0') : '<div class="empty">記録がたまると表示されます</div>'; };
+  sel.onchange = drawL; drawL();
+  $('#pendingNote').textContent = S.pending ? 'ハルの確認待ち ' + S.pending + '件（確認が終わると数字が反映されます）' : '数字はハルが確認したあとに反映されます（最大1日）。';
+}
+
+/* ---------- 筋トレ入力 ---------- */
+const T = { cards: [] };   // [{name, sets:[{w:'', r:''}]}]
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+const rm = (w, r) => Math.round(w * (1 + 0.025 * r) * 10) / 10;   // 筋トレMemoと同じ式
+const okSet = s => num(s.w) !== null && num(s.w) >= 0 && num(s.r) !== null && num(s.r) >= 1;
+const esc = x => String(x).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const blankSets = n => Array.from({ length: n }, () => ({ w: '', r: '' }));
+
+function renderCards(){
+  const box = $('#exList');
+  box.innerHTML = T.cards.map((c, ci) => {
+    const lr = S && S.last && S.last[c.name];
+    const lastTxt = lr ? '前回 ' + md(lr.date) + '　' + lr.sets.map(s => s.w + '×' + s.r).join(' / ') : '前回の記録なし';
+    const rows = c.sets.map((s, si) => {
+      const l = lr && lr.sets[si];
+      return '<div class="sr"><span class="no">' + (si + 1) + '</span>' +
+        '<input type="number" inputmode="decimal" step="0.5" data-c="' + ci + '" data-s="' + si + '" data-k="w" value="' + esc(s.w) + '" placeholder="' + (l ? l.w : '') + '">' +
+        '<span class="u">kg</span>' +
+        '<input type="number" inputmode="numeric" step="1" data-c="' + ci + '" data-s="' + si + '" data-k="r" value="' + esc(s.r) + '" placeholder="' + (l ? l.r : '') + '">' +
+        '<span class="u">回</span><span class="rm" id="rm-' + ci + '-' + si + '"></span>' +
+        '<button type="button" class="del" data-del="' + ci + ':' + si + '">×</button></div>';
+    }).join('');
+    return '<div class="ex"><div class="hd"><div class="nm">' + esc(c.name) + '</div><button type="button" class="x" data-rmex="' + ci + '">×</button></div>' +
+      '<div class="last">' + esc(lastTxt) + '</div>' + rows + '<button type="button" class="addset" data-add="' + ci + '">＋ セット追加</button></div>';
+  }).join('');
+  box.querySelectorAll('input').forEach(inp => inp.oninput = () => { T.cards[+inp.dataset.c].sets[+inp.dataset.s][inp.dataset.k] = inp.value; derive(); });
+  box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const [ci, si] = b.dataset.del.split(':').map(Number);
+    T.cards[ci].sets.splice(si, 1); if (!T.cards[ci].sets.length) T.cards[ci].sets = blankSets(1);
+    renderCards();
+  });
+  box.querySelectorAll('[data-add]').forEach(b => b.onclick = () => { T.cards[+b.dataset.add].sets.push({ w: '', r: '' }); renderCards(); });
+  box.querySelectorAll('[data-rmex]').forEach(b => b.onclick = () => { T.cards.splice(+b.dataset.rmex, 1); renderCards(); });
+  derive();
+}
+function derive(){
+  let ne = 0, ns = 0, nr = 0, vol = 0;
+  T.cards.forEach((c, ci) => {
+    let any = false;
+    c.sets.forEach((s, si) => {
+      const el = $('#rm-' + ci + '-' + si);
+      if (okSet(s)){ any = true; ns++; nr += num(s.r); vol += num(s.w) * num(s.r); if (el) el.textContent = 'RM ' + rm(num(s.w), num(s.r)); }
+      else if (el) el.textContent = '';
+    });
+    if (any) ne++;
+  });
+  $('#cE').textContent = ne; $('#cS').textContent = ns; $('#cR').textContent = nr; $('#cV').textContent = Math.round(vol);
+}
+function openSheet(){
+  const ex = (S && S.exercises) || [], used = new Set(T.cards.map(c => c.name));
+  const parts = [...new Set(ex.map(e => e.part))];
+  $('#exSheetIn').innerHTML = '<div class="row"><b>種目を選ぶ</b><button type="button" class="btn ghost small" id="shClose">閉じる</button></div>' +
+    parts.map(p => (p ? '<h3>' + esc(p) + '</h3>' : '') + ex.filter(e => e.part === p).map(e =>
+      '<button type="button" class="opt' + (used.has(e.name) ? ' used' : '') + '" data-n="' + esc(e.name) + '">' + esc(e.name) + '</button>').join('')).join('');
+  $('#shClose').onclick = () => $('#exSheet').classList.remove('on');
+  $('#exSheetIn').querySelectorAll('.opt').forEach(b => b.onclick = () => {
+    if (used.has(b.dataset.n)) return toast('追加済みです');
+    T.cards.push({ name: b.dataset.n, sets: blankSets(3) });
+    $('#exSheet').classList.remove('on'); renderCards();
+  });
+  $('#exSheet').classList.add('on');
+}
+async function loadTrainDay(){
+  if (!S){ try{ S = await api.status(); }catch(e){} }
+  T.cards = [];
+  let r = { mode: 'none', sets: [] };
+  try{ r = await api.day($('#trainDate').value); }catch(e){}
+  if (r.mode === 'input'){
+    const map = {};
+    (r.sets || []).forEach(s => {
+      if (!map[s.exercise]){ map[s.exercise] = { name: s.exercise, sets: [] }; T.cards.push(map[s.exercise]); }
+      map[s.exercise].sets.push({ w: String(s.weight), r: String(s.reps) });
+    });
+  }
+  $('#trainNote').textContent = r.mode === 'input' ? 'この日はすでに記録があります。直して保存すると上書きされます。'
+    : r.mode === 'shot' ? 'この日はスクショで送信済みです。' : r.mode === 'rest' ? 'この日は休みで記録されています。保存すると休みは取り消されます。' : '';
+  renderCards();
+}
+function setPane(p){
+  $('#paneInput').style.display = p === 'input' ? '' : 'none';
+  $('#paneShot').style.display = p === 'shot' ? '' : 'none';
+  $('#segInput').classList.toggle('on', p === 'input'); $('#segShot').classList.toggle('on', p === 'shot');
+}
+$('#segInput').onclick = () => setPane('input'); $('#segShot').onclick = () => setPane('shot');
+$('#addEx').onclick = openSheet;
+$('#exSheet').onclick = e => { if (e.target.id === 'exSheet') $('#exSheet').classList.remove('on'); };
+$('#trainDate').onchange = loadTrainDay;
+
+/* ---------- 提出 ---------- */
+async function send(btn, payload, onOk, okMsg){
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '送信中…';
+  try{
+    const r = await api.submit(payload);
+    if (!r.ok) throw new Error(r.error || 'error');
+    toast(okMsg || '送信しました');
+    onOk && onOk();
+    show('home');
+  }catch(e){
+    const m = String(e.message); toast(m === 'unauthorized' ? 'URLが正しくありません' : /^その日/.test(m) ? m : '送れませんでした。電波のいい所でもう一度');
+  }finally{ btn.disabled = false; btn.textContent = label; }
+}
+const mealPicker = Picker($('#mealPicker'), { max: 3, label: 'スクショを選ぶ' });
+const trainPicker = Picker($('#trainPicker'), { max: 3, label: 'スクショを選ぶ' });
+const wp = {
+  '体_正面': Picker($('#pBodyF'), { label: '選ぶ' }), '体_横': Picker($('#pBodyS'), { label: '選ぶ' }), '体_後ろ': Picker($('#pBodyB'), { label: '選ぶ' }),
+  '顔_正面': Picker($('#pFaceF'), { label: '選ぶ' }), '顔_横': Picker($('#pFaceS'), { label: '選ぶ' })
+};
+['mealDate', 'trainDate', 'weekDate'].forEach(id => { $('#' + id).value = ymd(); });
+
+$('#mealSend').onclick = e => {
+  if (!mealPicker.items.length) return toast('スクショを選んでください');
+  send(e.target, { action: 'meal', date: $('#mealDate').value, images: toPayload(mealPicker.items) }, () => mealPicker.clear(), '食事を送りました');
+};
+$('#trainSave').onclick = e => {
+  const sets = [];
+  T.cards.forEach(c => c.sets.forEach(s => { if (okSet(s)) sets.push({ exercise: c.name, weight: num(s.w), reps: num(s.r) }); }));
+  if (!sets.length) return toast('重さと回数を入れてください');
+  send(e.target, { action: 'trainlog', date: $('#trainDate').value, sets }, null, '筋トレを保存しました（' + sets.length + 'セット）');
+};
+$('#trainSend').onclick = e => {
+  if (!trainPicker.items.length) return toast('スクショを選んでください');
+  send(e.target, { action: 'train', date: $('#trainDate').value, images: toPayload(trainPicker.items) }, () => trainPicker.clear(), '筋トレを送りました');
+};
+$('#restBtn').onclick = e => send(e.target, { action: 'rest', date: $('#trainDate').value }, null, '休みで記録しました');
+$('#weekSend').onclick = e => {
+  const w = parseFloat($('#wWeight').value);
+  if (!isFinite(w)) return toast('体重を入れてください');
+  const labels = Object.keys(wp).filter(k => wp[k].items.length);
+  const imgs = labels.map(k => ({ label: k, mime: 'image/jpeg', data: wp[k].items[0].data.split(',')[1] }));
+  send(e.target, {
+    action: 'weekly', date: $('#weekDate').value, images: imgs,
+    fields: { weight: w, waist: $('#wWaist').value, good: $('#wGood').value, struggle: $('#wStruggle').value, next: $('#wNext').value }
+  }, () => {
+    ['wWeight', 'wWaist', 'wGood', 'wStruggle', 'wNext'].forEach(id => $('#' + id).value = '');
+    Object.values(wp).forEach(p => p.clear());
+  }, '週1を送りました（写真 ' + labels.length + '/5）');
+};
+
+/* ---------- リマインド（.ics） ---------- */
+function icsText(s){ return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n'); }
+function icsStamp(d, hh, mm){ return d.getFullYear() + p2(d.getMonth()+1) + p2(d.getDate()) + 'T' + p2(hh) + p2(mm) + '00'; }
+function nextDow(dow){ const d = new Date(); d.setHours(0, 0, 0, 0); while (d.getDay() !== dow) d.setDate(d.getDate() + 1); return d; }
+function buildIcs(daily){
+  const [h, m] = (daily || '21:00').split(':').map(Number);
+  const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const url = location.href.split('#')[0];
+  const ev = (uid, title, desc, start, rule) => [
+    'BEGIN:VEVENT', 'UID:' + uid + '@hal-luxmax-record', 'DTSTAMP:' + now, 'DTSTART:' + start,
+    'DURATION:PT15M', 'RRULE:' + rule, 'SUMMARY:' + icsText(title), 'DESCRIPTION:' + icsText(desc + '\n' + url),
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsText(title), 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT'];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//hal_luxmax//record//JP', 'CALSCALE:GREGORIAN']
+    .concat(ev('daily', '食事のスクショを送る', 'カロミルの今日の画面をスクショして、記録アプリから送る', icsStamp(new Date(), h, m), 'FREQ=DAILY'))
+    .concat(ev('fri', '明日は週1チェックイン', '明日の朝に体重を測って、週1チェックインを出す日', icsStamp(nextDow(5), 20, 0), 'FREQ=WEEKLY;BYDAY=FR'))
+    .concat(ev('sat', '週1チェックインを出す', '体重・ウエスト・写真を記録アプリから送る', icsStamp(nextDow(6), 20, 0), 'FREQ=WEEKLY;BYDAY=SA'))
+    .concat(['END:VCALENDAR']);
+  return lines.join('\r\n');
+}
+$('#remBtn').onclick = () => {
+  try{
+    const blob = new Blob([buildIcs($('#remTime').value)], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '記録リマインダー.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+    $('#remNote').textContent = '開いた画面で「すべて追加」を押してください。出ない場合はSafariでこのページを開いてもう一度押してください。';
+  }catch(e){ $('#remNote').textContent = 'この画面では登録できませんでした。Safariで開いてもう一度押してください。'; }
+};
+
+/* ---------- 初期表示 ---------- */
+if (DEMO) $('#demoTag').innerHTML = '<span class="demo">DEMO</span>';
+(function(){
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent), standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  if (ios && !standalone && !DEMO) $('#installHint').innerHTML = '<div class="hint">Safariの共有ボタン → 「ホーム画面に追加」で、アプリとして使えます。</div>';
+})();
+loadHome();
+</script>
+</body>
+</html>
