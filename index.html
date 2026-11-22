@@ -109,7 +109,7 @@ nav button.on{color:var(--gold)}
 
   <h2>リマインド</h2>
   <div class="card">
-    <div class="sub">毎日の食事、金曜の予告、土曜の週1提出をiPhoneのカレンダーに通知つきで入れます。</div>
+    <div class="sub">毎日の食事、金曜の予告、土曜の週1提出をスマホのカレンダーに通知つきで入れます。</div>
     <label class="f">毎日の通知時刻</label>
     <input type="time" id="remTime" value="21:00">
     <button class="btn ghost" id="remBtn">カレンダーに登録</button>
@@ -123,6 +123,8 @@ nav button.on{color:var(--gold)}
   <div class="card">
     <div class="sub">カロミルの今日の画面をスクショして選ぶだけ。1日1回、寝る前でOK。</div>
     <label class="f">日付</label><input type="date" id="mealDate">
+    <label class="f">今朝の体重 (kg)</label><input type="number" id="mealWeight" inputmode="decimal" step="0.1" placeholder="65.4">
+    <div class="sub">朝起きてトイレに行ったあとに測った数字。測れなかった日は空のままでOK。</div>
     <label class="f">スクショ（最大3枚）</label>
     <div id="mealPicker"></div>
     <button class="btn" id="mealSend">送信</button>
@@ -547,7 +549,9 @@ const wp = {
 
 $('#mealSend').onclick = e => {
   if (!mealPicker.items.length) return toast('スクショを選んでください');
-  send(e.target, { action: 'meal', date: $('#mealDate').value, images: toPayload(mealPicker.items) }, () => mealPicker.clear(), '食事を送りました');
+  const w = $('#mealWeight').value.trim();
+  if (w !== '' && (Number(w) < 20 || Number(w) > 300)) return toast('体重の数字を確かめてください');
+  send(e.target, { action: 'meal', date: $('#mealDate').value, weight: w, images: toPayload(mealPicker.items) }, () => { mealPicker.clear(); $('#mealWeight').value = ''; }, '食事を送りました');
 };
 $('#trainSave').onclick = e => {
   const sets = [];
@@ -594,7 +598,27 @@ function buildIcs(daily){
     .concat(['END:VCALENDAR']);
   return lines.join('\r\n');
 }
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+function gcalLinks(daily){
+  const [h, m] = (daily || '21:00').split(':').map(Number);
+  const at = (d, hh, mm) => { const x = new Date(d); x.setHours(hh, mm, 0, 0); return x; };
+  const fmt = (x) => icsStamp(x, x.getHours(), x.getMinutes());
+  const end = (x) => fmt(new Date(x.getTime() + 15 * 60000));
+  const link = (title, desc, start, rule) => 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+    + '&text=' + encodeURIComponent(title) + '&details=' + encodeURIComponent(desc)
+    + '&dates=' + fmt(start) + '/' + end(start) + '&ctz=Asia%2FTokyo&recur=' + encodeURIComponent('RRULE:' + rule);
+  return [
+    ['毎日：食事のスクショ', link('食事のスクショを送る', 'カロミルの今日の画面をスクショして、記録アプリから送る', at(new Date(), h, m), 'FREQ=DAILY')],
+    ['金曜：明日は週1', link('明日は週1チェックイン', '明日の朝に体重を測って、週1チェックインを出す日', at(nextDow(5), 20, 0), 'FREQ=WEEKLY;BYDAY=FR')],
+    ['土曜：週1を出す', link('週1チェックインを出す', '体重・ウエスト・写真を記録アプリから送る', at(nextDow(6), 20, 0), 'FREQ=WEEKLY;BYDAY=SA')]
+  ];
+}
 $('#remBtn').onclick = () => {
+  if (IS_ANDROID) {
+    $('#remNote').innerHTML = '3つを1つずつ押して、Googleカレンダーで「保存」を押してください。通知がオンになっているかも確認してください。'
+      + gcalLinks($('#remTime').value).map(([label, href]) => '<a class="btn ghost" style="display:block;margin-top:8px;text-align:center;text-decoration:none" target="_blank" rel="noopener" href="' + href + '">' + label + '</a>').join('');
+    return;
+  }
   try{
     const blob = new Blob([buildIcs($('#remTime').value)], { type: 'text/calendar;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = '記録リマインダー.ics';
@@ -607,6 +631,7 @@ $('#remBtn').onclick = () => {
 if (DEMO) $('#demoTag').innerHTML = '<span class="demo">DEMO</span>';
 (function(){
   const ios = /iPhone|iPad|iPod/.test(navigator.userAgent), standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  if (IS_ANDROID && !standalone && !DEMO) $('#installHint').innerHTML = '<div class="hint">Chromeの右上「︙」→「ホーム画面に追加」で、アプリとして使えます。</div>';
   if (ios && !standalone && !DEMO) $('#installHint').innerHTML = '<div class="hint">Safariの共有ボタン → 「ホーム画面に追加」で、アプリとして使えます。</div>';
 })();
 loadHome();
