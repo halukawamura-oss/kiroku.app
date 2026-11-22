@@ -72,6 +72,10 @@ textarea{min-height:76px;resize:vertical}
 .sheet h3{margin:14px 0 8px;font-size:12.5px;color:var(--gold);font-weight:600;letter-spacing:.06em}
 .sheet .opt{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;margin-bottom:6px;font-size:15px}
 .sheet .opt.used{opacity:.4}
+.sheet .opt.addp{border-style:dashed;color:var(--gold);background:transparent}
+.sheet .addrow{display:none;gap:8px;margin-bottom:6px}
+.sheet .addrow.on{display:flex}
+.sheet .addrow input{flex:1}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:rgba(14,14,17,.96);border-top:1px solid var(--line);padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);backdrop-filter:blur(10px)}
 nav button{flex:1;background:none;border:0;color:var(--sub);font-size:11px;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav button .ic{font-size:19px;line-height:1}
@@ -286,7 +290,7 @@ const api = {
         Object.keys(by).forEach(n => last[n] = { date: x, sets: by[n] });
       });
       if (!last['ベンチプレス']) last['ベンチプレス'] = { date: addDays(t, -1), sets: [{ w: 80, r: 5 }, { w: 70, r: 7 }, { w: 60, r: 7 }] };
-      return { ok: true, name: 'デモ', today: t, mealToday: !!md_[t], exercises: DEFAULT_EX, last,
+      return { ok: true, name: 'デモ', today: t, mealToday: !!md_[t], exercises: store.get('demoEx') || [], last,
         trainToday: tr.some(l => l.kind === 'train') ? 'done' : (tr.length ? 'rest' : 'none'),
         streak, lastWeekly: wk, pending: L.filter(l => l.kind === 'meal' || l.kind === 'train').length,
         series: { weight: sp(sample.weight), kcal: sp(sample.kcal), lifts: Object.fromEntries(Object.entries(sample.lifts).map(([k, v]) => [k, sp(v)])) } };
@@ -309,6 +313,12 @@ const api = {
     payload.c = cfg.c; payload.k = cfg.k;
     if (DEMO){
       let L = store.get('demoLogs') || [];
+      if (payload.action === 'addExercise'){
+        const E = store.get('demoEx') || [];
+        if (E.some(e => e.name === payload.name)) return { ok: false, error: 'その種目は追加済みです' };
+        E.push({ part: payload.part, name: payload.name }); store.set('demoEx', E);
+        return { ok: true, part: payload.part, name: payload.name };
+      }
       if (payload.action === 'trainlog'){
         const DT = store.get('demoTrain') || {};
         DT[payload.date] = payload.sets; store.set('demoTrain', DT);
@@ -442,17 +452,46 @@ function derive(){
   });
   $('#cE').textContent = ne; $('#cS').textContent = ns; $('#cR').textContent = nr; $('#cV').textContent = Math.round(vol);
 }
+const PARTS = ['胸', '背中', '肩', '腕', '脚', '腹'];
 function openSheet(){
   const ex = (S && S.exercises) || [], used = new Set(T.cards.map(c => c.name));
-  const parts = [...new Set(ex.map(e => e.part))];
+  const parts = PARTS.concat([...new Set(ex.map(e => e.part))].filter(p => !PARTS.includes(p)));
   $('#exSheetIn').innerHTML = '<div class="row"><b>種目を選ぶ</b><button type="button" class="btn ghost small" id="shClose">閉じる</button></div>' +
-    parts.map(p => (p ? '<h3>' + esc(p) + '</h3>' : '') + ex.filter(e => e.part === p).map(e =>
-      '<button type="button" class="opt' + (used.has(e.name) ? ' used' : '') + '" data-n="' + esc(e.name) + '">' + esc(e.name) + '</button>').join('')).join('');
+    (ex.length ? '' : '<div class="sub" style="margin-top:8px">自分がやる種目を部位ごとに追加してください。次からはここに出ます。</div>') +
+    parts.map(p => '<h3>' + esc(p) + '</h3>' + ex.filter(e => e.part === p).map(e =>
+      '<button type="button" class="opt' + (used.has(e.name) ? ' used' : '') + '" data-n="' + esc(e.name) + '">' + esc(e.name) + '</button>').join('') +
+      '<button type="button" class="opt addp" data-p="' + esc(p) + '">＋ ' + esc(p) + 'の種目を追加</button>' +
+      '<div class="addrow" data-row="' + esc(p) + '"><input type="text" maxlength="40" placeholder="' + esc(p) + 'の種目名"><button type="button" class="btn small">追加</button></div>').join('');
   $('#shClose').onclick = () => $('#exSheet').classList.remove('on');
-  $('#exSheetIn').querySelectorAll('.opt').forEach(b => b.onclick = () => {
-    if (used.has(b.dataset.n)) return toast('追加済みです');
-    T.cards.push({ name: b.dataset.n, sets: blankSets(3) });
+  const pick = name => {
+    if (T.cards.some(c => c.name === name)) return toast('追加済みです');
+    T.cards.push({ name, sets: blankSets(3) });
     $('#exSheet').classList.remove('on'); renderCards();
+  };
+  $('#exSheetIn').querySelectorAll('.opt[data-n]').forEach(b => b.onclick = () => pick(b.dataset.n));
+  $('#exSheetIn').querySelectorAll('.addp').forEach(b => b.onclick = () => {
+    const row = $('#exSheetIn').querySelector('.addrow[data-row="' + b.dataset.p + '"]');
+    b.style.display = 'none'; row.classList.add('on'); row.querySelector('input').focus();
+  });
+  $('#exSheetIn').querySelectorAll('.addrow').forEach(row => {
+    const inp = row.querySelector('input'), btn = row.querySelector('button');
+    const go = async () => {
+      const name = inp.value.trim().replace(/\s+/g, ' ');
+      if (!name) return toast('種目名を入れてください');
+      if (ex.some(e => e.name === name)) return toast('その種目は追加済みです');
+      btn.disabled = true; btn.textContent = '追加中…';
+      try{
+        const r = await api.submit({ action: 'addExercise', part: row.dataset.row, name });
+        if (!r.ok) throw new Error(r.error || 'error');
+        S.exercises = ex.concat([{ part: r.part, name: r.name }]);
+        toast(r.name + 'を追加しました');
+        pick(r.name);
+      }catch(e){
+        const m = String(e.message); toast(/追加済み|種目/.test(m) ? m : '追加できませんでした。電波のいい所でもう一度');
+      }finally{ btn.disabled = false; btn.textContent = '追加'; }
+    };
+    btn.onclick = go;
+    inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); go(); } };
   });
   $('#exSheet').classList.add('on');
 }
